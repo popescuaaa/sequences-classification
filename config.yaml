@@ -1,0 +1,27 @@
+system:
+  batch_size: 32
+  num_classes: 10
+  device: 'cuda:0'
+  lr: 1e-3
+
+rnn:
+  input: 2
+  hidden: 32
+  num_layers: 1
+  num_epochs: 10
+
+lstm:
+  input: 2
+  hidden: 32
+  num_layers: 1
+  num_epochs: 10
+
+gru:
+  input: 2
+  hidden: 32
+  num_layers: 1
+  num_epochs: 10
+
+cnn:
+
+tcnn:
