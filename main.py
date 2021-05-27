@@ -7,6 +7,7 @@ import yaml
 from typing import Dict
 from torch.utils.data import DataLoader
 
+
 # TODO: investigate why is 2 and not 8
 
 
@@ -50,6 +51,35 @@ def RNNClassifierTrainer(cfg: Dict):
 
     # Save model
     torch.save(model.state_dict(), './trained_models/rnn.pt')
+
+
+def RNNClassifierTester(cfg: Dict, model_path: str):
+    device = torch.device(cfg['system']['device'])
+    batch_size = int(cfg['system']['batch_size'])
+
+    model = RNNClassifier.RNNClassifier(cfg)
+    model.load_state_dict(torch.load(model_path))
+    model = model.to(device)
+    model.eval()
+
+    ds = Pendigits.Pendigits('./data/pendigits.tes')
+    dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
+
+    acc = 0.0
+    for idx, e in enumerate(dl):
+        digits, labels = e
+        digits = digits.float()
+        digits = digits.to(device)
+        labels = labels.to(device)
+
+        out = model(digits)
+        _, pred = torch.max(out, 1)
+
+        num_correct = (pred == labels)
+        num_correct = num_correct.sum()
+        acc += num_correct.item() / len(labels)
+
+    print('[RNN-Test] Acc: {:.6f}'.format(acc / len(dl)))
 
 
 def LSTMClassifierTrainer(cfg: Dict):
@@ -140,5 +170,4 @@ if __name__ == '__main__':
     with open('./config.yaml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     RNNClassifierTrainer(cfg=config)
-    LSTMClassifierTrainer(cfg=config)
-    GRUClassifierTrainer(cfg=config)
+    RNNClassifierTester(cfg=config, model_path='./trained_models/rnn.pt')
