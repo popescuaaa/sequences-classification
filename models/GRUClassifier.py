@@ -19,7 +19,7 @@ class GRUClassifier(nn.Module):
         self.ll = nn.Linear(self.dim_hidden, self.num_classes)
 
     def forward(self, seq: Tensor) -> Tensor:
-        r_out, (h_n, h_c) = self.rnn(seq)
+        r_out, _ = self.rnn(seq)
         out = self.ll(r_out[:, -1, :])
         return out
 

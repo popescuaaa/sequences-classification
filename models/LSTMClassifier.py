@@ -12,14 +12,14 @@ class LSTMClassifier(nn.Module):
         self.num_classes = int(cfg['system']['num_classes'])
 
         self.rnn = nn.LSTM(input_size=self.dim_input,
-                          hidden_size=self.dim_hidden,
-                          num_layers=self.num_layers,
-                          batch_first=True)
+                           hidden_size=self.dim_hidden,
+                           num_layers=self.num_layers,
+                           batch_first=True)
 
         self.ll = nn.Linear(self.dim_hidden, self.num_classes)
 
     def forward(self, seq: Tensor) -> Tensor:
-        r_out, (h_n, h_c) = self.rnn(seq)
+        r_out, _ = self.rnn(seq)
         out = self.ll(r_out[:, -1, :])
         return out
 
