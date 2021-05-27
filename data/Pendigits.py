@@ -9,6 +9,10 @@ class Pendigits(Dataset):
         with open(file_path, "r") as f:
             for i, line in enumerate(f):
                 coordinates = list(map(int, line.rstrip().split(',')[:-1]))
+                _coordinates = []
+                for j in range(0, len(coordinates), 2):
+                    _coordinates.append(coordinates[j: j + 2])
+                coordinates = _coordinates
                 line_class = int(line.split(',')[-1])
                 lines.append(coordinates)
                 classes.append(line_class)
@@ -30,3 +34,4 @@ if __name__ == '__main__':
         l, c = e
         print(c.shape)
         print(l.shape)
+        break
