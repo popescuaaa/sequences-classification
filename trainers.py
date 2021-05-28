@@ -1,13 +1,38 @@
 import torch
-from typing import Dict
+from typing import Dict, Tuple, List
 from models import RNNClassifier, LSTMClassifier, GRUClassifier
 import torch.nn as nn
 from data import Pendigits
 from torch.utils.data import DataLoader
 from torch.optim import Adam
+from torch import Tensor
 
 
-def RNNClassifierTrainer(cfg: Dict):
+def compute_validation_loss(model: nn.Module, cfg: Dict, criterion: nn.CrossEntropyLoss) -> Tensor:
+    device = torch.device(cfg['system']['device'])
+    model.eval()
+
+    val_ds = Pendigits.Pendigits(file_path='./data/pendigits.tes')
+    data, labels = val_ds.get_all()
+
+    data = torch.from_numpy(data)
+    labels = torch.from_numpy(labels)
+
+    bs, seq_len, features = data.shape
+    data = data.view(bs, features, seq_len)
+
+    data = data.float()
+    data = data.to(device)
+
+    labels = labels.to(device)
+
+    out = model(data)
+    loss = criterion(out, labels)
+
+    return loss
+
+
+def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
     device = torch.device(cfg['system']['device'])
     lr = float(cfg['system']['lr'])
     num_epochs = int(cfg['rnn']['num_epochs'])
@@ -18,20 +43,28 @@ def RNNClassifierTrainer(cfg: Dict):
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model.parameters(), lr=lr)
 
-    ds = Pendigits.Pendigits('./data/pendigits.tra')
+    ds = Pendigits.Pendigits(file_path='./data/pendigits.tra')
     dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
+
+    train_loss = []
+    validation_loss = []
 
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
+            model.train()
+
             digits, labels = e
+            bs, seq_len, features = digits.shape
+            digits = digits.view(bs, features, seq_len)
             digits = digits.float()
             digits = digits.to(device)
             labels = labels.to(device)
 
             out = model(digits)
             loss = criterion(out, labels)
-            _, pred = torch.max(out, 1)
+            train_loss.append(loss.cpu().data.item())
 
+            _, pred = torch.max(out, 1)
             num_correct = (pred == labels)
             num_correct = num_correct.sum()
             acc = num_correct.item() / len(labels)
@@ -40,13 +73,18 @@ def RNNClassifierTrainer(cfg: Dict):
             loss.backward()
             optimizer.step()
 
+            val_loss = compute_validation_loss(model=model, cfg=cfg, criterion=criterion).cpu().data.item()
+            validation_loss.append(val_loss)
+
             if idx == len(dl) - 1:
-                print('[RNN][{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(
+                print('[RNN][{}/{}] Training loss: {:.6f} | Validation loss: {:.6f} | Acc: {:.6f}'.format(
                     epoch,
-                    num_epochs, loss.item(), acc))
+                    num_epochs, loss.cpu().data.item(), val_loss, acc))
 
     # Save model
     torch.save(model.state_dict(), './trained_models/rnn.pt')
+
+    return train_loss, validation_loss
 
 
 def LSTMClassifierTrainer(cfg: Dict):
