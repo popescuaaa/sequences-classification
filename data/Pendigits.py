@@ -26,6 +26,9 @@ class Pendigits(Dataset):
     def __getitem__(self, item):
         return self.lines[item], self.classes[item]
 
+    def get_all(self):
+        return self.lines, self.classes
+
 
 if __name__ == '__main__':
     ds = Pendigits('pendigits.tra')
