@@ -6,6 +6,7 @@ from data import Pendigits
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 from torch import Tensor
+from evaluation_metrics import cm
 
 
 def compute_validation_loss(model: nn.Module, cfg: Dict, criterion: nn.CrossEntropyLoss) -> Tensor:
@@ -64,11 +65,6 @@ def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
             loss = criterion(out, labels)
             train_loss.append(loss.cpu().data.item())
 
-            _, pred = torch.max(out, 1)
-            num_correct = (pred == labels)
-            num_correct = num_correct.sum()
-            acc = num_correct.item() / len(labels)
-
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -77,9 +73,14 @@ def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
             validation_loss.append(val_loss)
 
             if idx == len(dl) - 1:
-                print('[RNN][{}/{}] Training loss: {:.6f} | Validation loss: {:.6f} | Acc: {:.6f}'.format(
+                print('[RNN][{}/{}] Training loss: {:.6f} | Validation loss: {:.6f}'.format(
                     epoch,
-                    num_epochs, loss.cpu().data.item(), val_loss, acc))
+                    num_epochs,
+                    loss.cpu().data.item(),
+                    val_loss))
+
+                # Step evaluation with confusion matrix and accuracy score
+                cm(model=model, cfg=cfg)
 
     # Save model
     torch.save(model.state_dict(), './trained_models/rnn.pt')
@@ -101,32 +102,45 @@ def LSTMClassifierTrainer(cfg: Dict):
     ds = Pendigits.Pendigits('./data/pendigits.tra')
     dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
 
+    train_loss = []
+    validation_loss = []
+
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
+            model.train()
+
             digits, labels = e
+            bs, seq_len, features = digits.shape
+            digits = digits.view(bs, features, seq_len)
             digits = digits.float()
             digits = digits.to(device)
             labels = labels.to(device)
 
             out = model(digits)
             loss = criterion(out, labels)
-            _, pred = torch.max(out, 1)
-
-            num_correct = (pred == labels)
-            num_correct = num_correct.sum()
-            acc = num_correct.item() / len(labels)
+            train_loss.append(loss.cpu().data.item())
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
+            val_loss = compute_validation_loss(model=model, cfg=cfg, criterion=criterion).cpu().data.item()
+            validation_loss.append(val_loss)
+
             if idx == len(dl) - 1:
-                print('[LSTM][{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(
+                print('[RNN][{}/{}] Training loss: {:.6f} | Validation loss: {:.6f}'.format(
                     epoch,
-                    num_epochs, loss.item(), acc))
+                    num_epochs,
+                    loss.cpu().data.item(),
+                    val_loss))
+
+                # Step evaluation with confusion matrix and accuracy score
+                cm(model=model, cfg=cfg)
 
     # Save model
     torch.save(model.state_dict(), './trained_models/lstm.pt')
+
+    return train_loss, validation_loss
 
 
 def GRUClassifierTrainer(cfg: Dict):
@@ -143,29 +157,42 @@ def GRUClassifierTrainer(cfg: Dict):
     ds = Pendigits.Pendigits('./data/pendigits.tra')
     dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
 
+    train_loss = []
+    validation_loss = []
+
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
+            model.train()
+
             digits, labels = e
+            bs, seq_len, features = digits.shape
+            digits = digits.view(bs, features, seq_len)
             digits = digits.float()
             digits = digits.to(device)
             labels = labels.to(device)
 
             out = model(digits)
             loss = criterion(out, labels)
-            _, pred = torch.max(out, 1)
-
-            num_correct = (pred == labels)
-            num_correct = num_correct.sum()
-            acc = num_correct.item() / len(labels)
+            train_loss.append(loss.cpu().data.item())
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
+            val_loss = compute_validation_loss(model=model, cfg=cfg, criterion=criterion).cpu().data.item()
+            validation_loss.append(val_loss)
+
             if idx == len(dl) - 1:
-                print('[GRU][{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(
+                print('[RNN][{}/{}] Training loss: {:.6f} | Validation loss: {:.6f}'.format(
                     epoch,
-                    num_epochs, loss.item(), acc))
+                    num_epochs,
+                    loss.cpu().data.item(),
+                    val_loss))
+
+                # Step evaluation with confusion matrix and accuracy score
+                cm(model=model, cfg=cfg)
 
     # Save model
     torch.save(model.state_dict(), './trained_models/gru.pt')
+
+    return train_loss, validation_loss
