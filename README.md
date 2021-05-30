@@ -8,17 +8,21 @@
 ## Tasklist 
 - [x] RNN
   - [x] imp
-  - [x] test
+  - [ ] test
 - [x] LSTM
   - [x] imp
-  - [x] test
+  - [ ] test
 - [x] GRU
   - [x] imp
-  - [x] test
+  - [ ] test
 - [x] CNN
+  - [x] imp
+  - [ ] test
 - [x] TCN
+  - [x] imp
+  - [ ] test
 - [x] metrics
-- [ ] params variation
-- [ ] wandb plots
-- [ ] wandb report for readme
-- [ ] readme 
+- [ ] params variation - sweep - on wandb - next
+- [x] wandb plots - aborted - just save pictures
+- [x] wandb report for readme - aborted
+- [ ] readme - overleaf template - 
