@@ -30,19 +30,20 @@ def cm(model: nn.Module, cfg: Dict, save_figure: bool = False, fig_name: str = N
 
     print('Accuracy score: {:.6f}'.format(accuracy_score(labels, pred)))
 
-    plt.figure(figsize=(10, 10), dpi=250)
+    fig = plt.figure(figsize=(10, 10), dpi=250)
     sns.heatmap(conf_matrix, annot=True)
     if show:
         plt.show()
     if save_figure:
         plt.savefig('./images/{}'.format(fig_name))
+    plt.close(fig)
 
 
 def plot_loss(training_loss: List, validation_loss: List, save_figure: bool = False, fig_name: str = None, show: bool = False):
     training_loss = np.array(training_loss)
     validation_loss = np.array(validation_loss)
 
-    plt.figure(figsize=(5, 5), dpi=200)
+    fig = plt.figure(figsize=(5, 5), dpi=200)
     plt.plot(training_loss, label='training loss')
     plt.plot(validation_loss, label='validation loss')
     plt.legend(loc='upper right')
@@ -51,3 +52,4 @@ def plot_loss(training_loss: List, validation_loss: List, save_figure: bool = Fa
         plt.show()
     if save_figure:
         plt.savefig('./images/{}'.format(fig_name))
+    plt.close(fig)
