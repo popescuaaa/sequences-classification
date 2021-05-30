@@ -1,6 +1,6 @@
 import torch
 from typing import Dict, Tuple, List
-from models import RNNClassifier, LSTMClassifier, GRUClassifier, CNNClassifier
+from models import RNNClassifier, LSTMClassifier, GRUClassifier, CNNClassifier, TCNNClassifier
 import torch.nn as nn
 from data import Pendigits
 from torch.utils.data import DataLoader
@@ -249,5 +249,60 @@ def CNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
 
     # Save model
     torch.save(model.state_dict(), './trained_models/cnn.pt')
+
+    return train_loss, validation_loss
+
+
+def TCNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
+    device = torch.device(cfg['system']['device'])
+    lr = float(cfg['system']['lr'])
+    num_epochs = int(cfg['tcn']['num_epochs'])
+    batch_size = int(cfg['system']['batch_size'])
+
+    model = TCNNClassifier.TCNClassifier(cfg=cfg)
+    model = model.to(device)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = Adam(model.parameters(), lr=lr)
+
+    ds = Pendigits.Pendigits('./data/pendigits.tra')
+    dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
+
+    train_loss = []
+    validation_loss = []
+
+    for epoch in range(1, num_epochs + 1):
+        for idx, e in enumerate(dl):
+            model.train()
+
+            digits, labels = e
+            bs, seq_len, features = digits.shape
+            digits = digits.view(bs, features, seq_len)
+            digits = digits.float()
+            digits = digits.to(device)
+            labels = labels.to(device)
+
+            out = model(digits)
+            loss = criterion(out, labels)
+            train_loss.append(loss.cpu().data.item())
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            val_loss = compute_validation_loss(model=model, cfg=cfg, criterion=criterion).cpu().data.item()
+            validation_loss.append(val_loss)
+
+            if idx == len(dl) - 1:
+                print('[TCN][{}/{}] Training loss: {:.6f} | Validation loss: {:.6f}'.format(
+                    epoch,
+                    num_epochs,
+                    loss.cpu().data.item(),
+                    val_loss))
+
+                # Step evaluation with confusion matrix and accuracy score
+                cm(model=model, cfg=cfg)
+
+    # Save model
+    torch.save(model.state_dict(), './trained_models/tcn.pt')
 
     return train_loss, validation_loss
