@@ -1,173 +1,35 @@
-import torch
-import torch.nn as nn
-from torch.optim import Adam
-from models import RNNClassifier, LSTMClassifier, GRUClassifier
-from data import Pendigits
 import yaml
-from typing import Dict
-from torch.utils.data import DataLoader
+from trainers import RNNClassifierTrainer, \
+    CNNClassifierTrainer, \
+    TCNClassifierTrainer, \
+    LSTMClassifierTrainer, \
+    GRUClassifierTrainer
 
+from evaluation_metrics import plot_loss
+import wandb
 
-# TODO: investigate why is 2 and not 8
-
-
-def RNNClassifierTrainer(cfg: Dict):
-    device = torch.device(cfg['system']['device'])
-    lr = float(cfg['system']['lr'])
-    num_epochs = int(cfg['rnn']['num_epochs'])
-    batch_size = int(cfg['system']['batch_size'])
-
-    model = RNNClassifier.RNNClassifier(cfg)
-    model = model.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr=lr)
-
-    ds = Pendigits.Pendigits('./data/pendigits.tra')
-    dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
-
-    for epoch in range(1, num_epochs + 1):
-        for idx, e in enumerate(dl):
-            digits, labels = e
-            digits = digits.float()
-            digits = digits.to(device)
-            labels = labels.to(device)
-
-            out = model(digits)
-            loss = criterion(out, labels)
-            _, pred = torch.max(out, 1)
-
-            num_correct = (pred == labels)
-            num_correct = num_correct.sum()
-            acc = num_correct.item() / len(labels)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            if idx == len(dl) - 1:
-                print('[RNN][{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(
-                    epoch,
-                    num_epochs, loss.item(), acc))
-
-    # Save model
-    torch.save(model.state_dict(), './trained_models/rnn.pt')
-
-
-def RNNClassifierTester(cfg: Dict, model_path: str):
-    device = torch.device(cfg['system']['device'])
-    batch_size = int(cfg['system']['batch_size'])
-
-    model = RNNClassifier.RNNClassifier(cfg)
-    model.load_state_dict(torch.load(model_path))
-    model = model.to(device)
-    model.eval()
-
-    ds = Pendigits.Pendigits('./data/pendigits.tes')
-    dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
-
-    acc = 0.0
-    for idx, e in enumerate(dl):
-        digits, labels = e
-        digits = digits.float()
-        digits = digits.to(device)
-        labels = labels.to(device)
-
-        out = model(digits)
-        _, pred = torch.max(out, 1)
-
-        num_correct = (pred == labels)
-        num_correct = num_correct.sum()
-        acc += num_correct.item() / len(labels)
-
-    print('[RNN-Test] Acc: {:.6f}'.format(acc / len(dl)))
-
-
-def LSTMClassifierTrainer(cfg: Dict):
-    device = torch.device(cfg['system']['device'])
-    lr = float(cfg['system']['lr'])
-    num_epochs = int(cfg['lstm']['num_epochs'])
-    batch_size = int(cfg['system']['batch_size'])
-
-    model = LSTMClassifier.LSTMClassifier(cfg=cfg)
-    model = model.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr=lr)
-
-    ds = Pendigits.Pendigits('./data/pendigits.tra')
-    dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
-
-    for epoch in range(1, num_epochs + 1):
-        for idx, e in enumerate(dl):
-            digits, labels = e
-            digits = digits.float()
-            digits = digits.to(device)
-            labels = labels.to(device)
-
-            out = model(digits)
-            loss = criterion(out, labels)
-            _, pred = torch.max(out, 1)
-
-            num_correct = (pred == labels)
-            num_correct = num_correct.sum()
-            acc = num_correct.item() / len(labels)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            if idx == len(dl) - 1:
-                print('[LSTM][{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(
-                    epoch,
-                    num_epochs, loss.item(), acc))
-
-    # Save model
-    torch.save(model.state_dict(), './trained_models/lstm.pt')
-
-
-def GRUClassifierTrainer(cfg: Dict):
-    device = torch.device(cfg['system']['device'])
-    lr = float(cfg['system']['lr'])
-    num_epochs = int(cfg['gru']['num_epochs'])
-    batch_size = int(cfg['system']['batch_size'])
-
-    model = LSTMClassifier.LSTMClassifier(cfg=cfg)
-    model = model.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = Adam(model.parameters(), lr=lr)
-
-    ds = Pendigits.Pendigits('./data/pendigits.tra')
-    dl = DataLoader(ds, num_workers=2, batch_size=batch_size)
-
-    for epoch in range(1, num_epochs + 1):
-        for idx, e in enumerate(dl):
-            digits, labels = e
-            digits = digits.float()
-            digits = digits.to(device)
-            labels = labels.to(device)
-
-            out = model(digits)
-            loss = criterion(out, labels)
-            _, pred = torch.max(out, 1)
-
-            num_correct = (pred == labels)
-            num_correct = num_correct.sum()
-            acc = num_correct.item() / len(labels)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            if idx == len(dl) - 1:
-                print('[GRU][{}/{}] Loss: {:.6f}, Acc: {:.6f}'.format(
-                    epoch,
-                    num_epochs, loss.item(), acc))
-
-    # Save model
-    torch.save(model.state_dict(), './trained_models/gru.pt')
-
+target = {
+    'rnn': RNNClassifierTrainer,
+    'lstm': LSTMClassifierTrainer,
+    'gru': GRUClassifierTrainer,
+    'cnn': CNNClassifierTrainer,
+    'tcn': TCNClassifierTrainer
+}
 
 if __name__ == '__main__':
     with open('./config.yaml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    RNNClassifierTrainer(cfg=config)
-    RNNClassifierTester(cfg=config, model_path='./trained_models/rnn.pt')
+
+    run_name = 'Seq classification - hw3 -'
+    wandb.init(config=config, project='seq-classification', name=run_name)
+    for model_name in target:
+        trainer = target[model_name]
+        tl, vl, cms = trainer(cfg=config)
+        loss_fig = plot_loss(tl, vl, show=True)
+        for cm in cms:
+            wandb.log({
+                'CM {} {}'.format(cms.index(cm), model_name): cm
+            })
+        wandb.log({
+            '{} Loss'.format(model_name): loss_fig,
+        })
