@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from typing import Dict
 from torch import Tensor
-import torch.nn.functional as F
+from helpers import Reshape
 
 
 class CNNClassifier(nn.Module):
@@ -14,47 +14,40 @@ class CNNClassifier(nn.Module):
         self.num_classes = int(cfg['system']['num_classes'])
         self.batch_size = int(cfg['system']['batch_size'])
 
-        self.conv1 = nn.Sequential(
+        self.net = nn.Sequential(
             nn.Conv1d(
                 in_channels=self.in_channels,
                 out_channels=self.out_channels,
-                kernel_size=(self.kernel_size, ),
-                stride=(2, )
+                kernel_size=(self.kernel_size,),
+                stride=(2,)
             ),
-            nn.ReLU()
-        )
-
-        self.conv2 = nn.Sequential(
-            nn.Conv1d(
-                in_channels=self.out_channels,
-                out_channels=self.out_channels,
-                kernel_size=(self.kernel_size, ),
-                stride=(2, )
-            ),
+            nn.BatchNorm1d(self.out_channels),
             nn.ReLU(),
-        )
-
-        self.conv3 = nn.Sequential(
             nn.Conv1d(
                 in_channels=self.out_channels,
                 out_channels=self.out_channels,
                 kernel_size=(self.kernel_size,),
                 stride=(2,)
             ),
+            nn.BatchNorm1d(self.out_channels),
             nn.ReLU(),
+            nn.Conv1d(
+                in_channels=self.out_channels,
+                out_channels=self.out_channels,
+                kernel_size=(self.kernel_size,),
+                stride=(2,)
+            ),
+            nn.BatchNorm1d(self.out_channels),
+            nn.ReLU(),
+            Reshape(self.out_channels),
+            nn.Linear(self.out_channels, self.out_channels * 3),
+            nn.ReLU(),
+            nn.Linear(self.out_channels * 3, self.num_classes),
+            nn.Softmax(dim=1)
         )
-        self.l = nn.Linear(self.out_channels, self.out_channels * 3)
-        self.ll = nn.Linear(self.out_channels * 3, self.num_classes)
 
     def forward(self, data: Tensor):
-        data = self.conv1(data)
-        data = self.conv2(data)
-        data = self.conv3(data)
-        data = data.view(-1, self.out_channels)
-        out = self.l(data)
-        out = F.relu(out)
-        out = self.ll(out)
-        out = F.softmax(out, dim=1)
+        out = self.net(data)
         return out
 
     @property
@@ -80,7 +73,7 @@ def run_cnn_test():
     data = torch.randn(size=(100, 2, 8))
     print(data.shape)
     out = c(data)
-    print(out)
+    print(out.shape)
 
 
 if __name__ == '__main__':

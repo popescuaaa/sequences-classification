@@ -7,23 +7,7 @@ from typing import Dict
 from torch import Tensor
 import torch
 
-
-class Logger(nn.Module):
-    def __init__(self):
-        super(Logger, self).__init__()
-
-    def forward(self, data: Tensor) -> Tensor:
-        print('Logger', data.shape)
-        return data
-
-
-class Reshape(nn.Module):
-    def __init__(self, size: int):
-        super(Reshape, self).__init__()
-        self.size = size
-
-    def forward(self, data: Tensor) -> Tensor:
-        return data.view(-1, self.size)
+from helpers import Reshape
 
 
 class TCNClassifier(nn.Module):
@@ -42,23 +26,27 @@ class TCNClassifier(nn.Module):
                 kernel_size=(self.kernel_size,),
                 stride=(self.stride,)
             ),
-            Logger(),
+            nn.BatchNorm1d(self.out_channels),
+            nn.ReLU(),
             nn.Conv1d(
                 in_channels=self.out_channels,
                 out_channels=self.out_channels,
                 kernel_size=(self.kernel_size,),
                 stride=(self.stride,)
             ),
-            Logger(),
+            nn.BatchNorm1d(self.out_channels),
+            nn.ReLU(),
             nn.Conv1d(
                 in_channels=self.out_channels,
                 out_channels=self.out_channels,
                 kernel_size=(self.kernel_size,),
                 stride=(self.stride,)
             ),
-            Logger(),
+            nn.BatchNorm1d(self.out_channels),
+            nn.ReLU(),
             Reshape(self.out_channels),
-            nn.Linear(self.out_channels, self.num_classes)
+            nn.utils.weight_norm(nn.Linear(self.out_channels, self.num_classes)),
+            nn.Softmax(dim=1)
         )
 
     def forward(self, data: Tensor) -> Tensor:
