@@ -5,23 +5,28 @@ system:
   lr: 1e-3
 
 rnn:
-  input: 2
+  input: 8
   hidden: 32
   num_layers: 1
   num_epochs: 10
 
 lstm:
-  input: 2
+  input: 8
   hidden: 32
   num_layers: 1
   num_epochs: 10
 
 gru:
-  input: 2
+  input: 8
   hidden: 32
   num_layers: 1
   num_epochs: 10
 
 cnn:
+  in_channels: 2
+  out_channels: 8
+  kernel_size: 2
+  stride: 2
+  num_epochs: 20
 
 tcnn:
