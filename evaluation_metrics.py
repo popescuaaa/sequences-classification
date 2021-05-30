@@ -36,10 +36,12 @@ def cm(model: nn.Module, cfg: Dict, save_figure: bool = False, fig_name: str = N
         plt.show()
     if save_figure:
         plt.savefig('./images/{}'.format(fig_name))
-    plt.close(fig)
+
+    return fig
 
 
-def plot_loss(training_loss: List, validation_loss: List, save_figure: bool = False, fig_name: str = None, show: bool = False):
+def plot_loss(training_loss: List, validation_loss: List, save_figure: bool = False, fig_name: str = None,
+              show: bool = False):
     training_loss = np.array(training_loss)
     validation_loss = np.array(validation_loss)
 
@@ -52,4 +54,4 @@ def plot_loss(training_loss: List, validation_loss: List, save_figure: bool = Fa
         plt.show()
     if save_figure:
         plt.savefig('./images/{}'.format(fig_name))
-    plt.close(fig)
+    return fig
