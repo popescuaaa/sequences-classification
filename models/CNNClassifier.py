@@ -43,17 +43,23 @@ class CNNClassifier(nn.Module):
             ),
             nn.ReLU(),
         )
-
-        self.ll = nn.Linear(self.out_channels, self.num_classes)
+        self.l = nn.Linear(self.out_channels, self.out_channels * 3)
+        self.ll = nn.Linear(self.out_channels * 3, self.num_classes)
 
     def forward(self, data: Tensor):
         data = self.conv1(data)
         data = self.conv2(data)
         data = self.conv3(data)
         data = data.view(-1, self.out_channels)
-        out = self.ll(data)
+        out = self.l(data)
+        out = F.relu(out)
+        out = self.ll(out)
         out = F.softmax(out, dim=1)
         return out
+
+    @property
+    def device(self):
+        return next(self.parameters()).device
 
 
 def run_cnn_test():
