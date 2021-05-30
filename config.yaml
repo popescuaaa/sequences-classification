@@ -29,4 +29,9 @@ cnn:
   stride: 2
   num_epochs: 20
 
-tcnn:
+tcn:
+  in_channels: 2
+  out_channels: 8
+  kernel_size: 2
+  stride: 2
+  num_epochs: 20
