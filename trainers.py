@@ -33,7 +33,7 @@ def compute_validation_loss(model: nn.Module, cfg: Dict, criterion: nn.CrossEntr
     return loss
 
 
-def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
+def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List, List]:
     device = torch.device(cfg['system']['device'])
     lr = float(cfg['system']['lr'])
     num_epochs = int(cfg['rnn']['num_epochs'])
@@ -49,6 +49,7 @@ def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
 
     train_loss = []
     validation_loss = []
+    cms = []
 
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
@@ -80,15 +81,15 @@ def RNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
                     val_loss))
 
                 # Step evaluation with confusion matrix and accuracy score
-                cm(model=model, cfg=cfg)
+                cms.append(cm(model=model, cfg=cfg))
 
     # Save model
     torch.save(model.state_dict(), './trained_models/rnn.pt')
 
-    return train_loss, validation_loss
+    return train_loss, validation_loss, cms
 
 
-def LSTMClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
+def LSTMClassifierTrainer(cfg: Dict) -> Tuple[List, List, List]:
     device = torch.device(cfg['system']['device'])
     lr = float(cfg['system']['lr'])
     num_epochs = int(cfg['lstm']['num_epochs'])
@@ -104,6 +105,7 @@ def LSTMClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
 
     train_loss = []
     validation_loss = []
+    cms = []
 
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
@@ -135,15 +137,15 @@ def LSTMClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
                     val_loss))
 
                 # Step evaluation with confusion matrix and accuracy score
-                cm(model=model, cfg=cfg)
+                cms.append(cm(model=model, cfg=cfg))
 
     # Save model
     torch.save(model.state_dict(), './trained_models/lstm.pt')
 
-    return train_loss, validation_loss
+    return train_loss, validation_loss, cms
 
 
-def GRUClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
+def GRUClassifierTrainer(cfg: Dict) -> Tuple[List, List, List]:
     device = torch.device(cfg['system']['device'])
     lr = float(cfg['system']['lr'])
     num_epochs = int(cfg['gru']['num_epochs'])
@@ -159,6 +161,7 @@ def GRUClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
 
     train_loss = []
     validation_loss = []
+    cms = []
 
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
@@ -190,15 +193,15 @@ def GRUClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
                     val_loss))
 
                 # Step evaluation with confusion matrix and accuracy score
-                cm(model=model, cfg=cfg)
+                cms.append(cm(model=model, cfg=cfg))
 
     # Save model
     torch.save(model.state_dict(), './trained_models/gru.pt')
 
-    return train_loss, validation_loss
+    return train_loss, validation_loss, cms
 
 
-def CNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
+def CNNClassifierTrainer(cfg: Dict) -> Tuple[List, List, List]:
     device = torch.device(cfg['system']['device'])
     lr = float(cfg['system']['lr'])
     num_epochs = int(cfg['cnn']['num_epochs'])
@@ -214,6 +217,7 @@ def CNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
 
     train_loss = []
     validation_loss = []
+    cms = []
 
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
@@ -245,15 +249,15 @@ def CNNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
                     val_loss))
 
                 # Step evaluation with confusion matrix and accuracy score
-                cm(model=model, cfg=cfg)
+                cms.append(cm(model=model, cfg=cfg))
 
     # Save model
     torch.save(model.state_dict(), './trained_models/cnn.pt')
 
-    return train_loss, validation_loss
+    return train_loss, validation_loss, cms
 
 
-def TCNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
+def TCNClassifierTrainer(cfg: Dict) -> Tuple[List, List, List]:
     device = torch.device(cfg['system']['device'])
     lr = float(cfg['system']['lr'])
     num_epochs = int(cfg['tcn']['num_epochs'])
@@ -269,6 +273,7 @@ def TCNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
 
     train_loss = []
     validation_loss = []
+    cms = []
 
     for epoch in range(1, num_epochs + 1):
         for idx, e in enumerate(dl):
@@ -300,9 +305,9 @@ def TCNClassifierTrainer(cfg: Dict) -> Tuple[List, List]:
                     val_loss))
 
                 # Step evaluation with confusion matrix and accuracy score
-                cm(model=model, cfg=cfg)
+                cms.append(cm(model=model, cfg=cfg))
 
     # Save model
     torch.save(model.state_dict(), './trained_models/tcn.pt')
 
-    return train_loss, validation_loss
+    return train_loss, validation_loss, cms
